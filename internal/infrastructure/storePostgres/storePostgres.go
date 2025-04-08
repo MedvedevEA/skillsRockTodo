@@ -1,1 +1,1 @@
-package storepg
+package storepostgres
