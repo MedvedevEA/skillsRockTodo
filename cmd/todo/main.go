@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -36,6 +37,8 @@ func main() {
 	}
 
 	store := storemap.New()
+	fmt.Println(logger)
+	fmt.Println(store)
 
 	/*
 		// Создание сервиса с бизнес-логикой

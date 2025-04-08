@@ -1,29 +1,81 @@
 package storemap
 
-import "skillsRockTodo/internal/entity"
+import (
+	"errors"
+	"skillsRockTodo/internal/entity"
+	"time"
+)
 
 type StoreMap struct {
-	data []*entity.Task
+	serial int
+	data   []*entity.Task
 }
 
 func New() *StoreMap {
 	return &StoreMap{
-		data: []*entity.Task{},
+		serial: 0,
+		data:   []*entity.Task{},
 	}
 }
 
-func (s *StoreMap) CreateTask(task *entity.Task) error {
+func (s *StoreMap) CreateTask(dto *repository.dtoCreateTaskReq) error {
+	s.serial++
+	task := entity.Task{
+		Id:          s.serial,
+		Title:       dto.Title,
+		Description: dto.Description,
+		Status:      dto.Status,
+		CreateAt:    time.Now(),
+		UpdateAt:    time.Now(),
+	}
+	s.data = append(s.data, &task)
 	return nil
 }
 func (s *StoreMap) GetTasks() ([]*entity.Task, error) {
-	return nil, nil
+	tasks := []*entity.Task{}
+	for i := range s.data {
+		task := *s.data[i]
+		tasks = append(tasks, &task)
+	}
+
+	return tasks, nil
 }
-func (s *StoreMap) GetTask(taskId int) (*entity.Task, error) {
-	return nil, nil
+func (s *StoreMap) GetTask(Id int) (*entity.Task, error) {
+
+	for i := range s.data {
+		if s.data[i].Id == Id {
+			task := *s.data[i]
+			return *task, nil
+		}
+	}
+	return nil, errors.New("task not found")
 }
-func (s *StoreMap) UpdateTask(task *entity.Task) error {
-	return nil
+func (s *StoreMap) UpdateTask(dto *repository.dtoUpdateTaskReq) error {
+	for i := range s.data {
+		if s.data[i].Id == taskId {
+			task := *s.data[i]
+			if dto.Title != nil {
+				task.Title = *dto.Title
+			}
+			if dto.Description != nil {
+				task.Description = *dto.Description
+			}
+			if dto.Status != nil {
+				task.Status = *dto.Status
+			}
+			task.UpdateAt = time.Now()
+			return nil
+		}
+	}
+	return errors.New("task not found")
 }
-func (s *StoreMap) DeleteTask(taskId int) error {
-	return nil
+func (s *StoreMap) DeleteTask(Id int) error {
+	for i := range s.data {
+		if s.data[i].Id == Id {
+			s.data[i] = s.data[len(s.data-1)]
+			s.data = s.data[:len(s.data-1)]
+			return nil
+		}
+	}
+	return errors.New("task not found")
 }
