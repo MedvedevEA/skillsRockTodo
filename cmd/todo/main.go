@@ -8,6 +8,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 
+	"skillsRockTodo/internal/apiserver"
 	"skillsRockTodo/internal/config"
 	"skillsRockTodo/internal/infrastructure/storemap"
 	customLogger "skillsRockTodo/internal/logger"
@@ -23,7 +24,6 @@ func main() {
 		if err != nil {
 			log.Fatal(errors.Wrap(err, "failed to load .env file"))
 		}
-
 	}
 
 	var cfg config.TodoConfig
@@ -39,23 +39,12 @@ func main() {
 	store := storemap.New()
 
 	service := service.New(store, logger)
-	/*
-		// Инициализация API
-		app := api.NewRouters(&api.Routers{Service: serviceInstance}, cfg.Rest.Token)
 
-		// Запуск HTTP-сервера в отдельной горутине
-		go func() {
-			logger.Infof("Starting server on %s", cfg.Rest.ListenAddress)
-			if err := app.Listen(cfg.Rest.ListenAddress); err != nil {
-				log.Fatal(errors.Wrap(err, "failed to start server"))
-			}
-		}()
+	logger.Infof("API Server '%s' is started in addr:[%s]", cfg.Rest.ServerName, cfg.Rest.ListenAddress)
+	apiServer := apiserver.New(service, cfg.Rest.Token)
+	if err := apiServer.Run(); err != nil {
+		logger.Fatalf("API Server '%s' error: %s", cfg.Rest.ServerName, err)
+	}
+	logger.Infof("API Server '%s' is stoped", cfg.Rest.ServerName)
 
-		// Ожидание системных сигналов для корректного завершения работы
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-		<-signalChan
-
-		logger.Info("Shutting down gracefully...")
-	*/
 }
