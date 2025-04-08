@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -12,6 +11,7 @@ import (
 	"skillsRockTodo/internal/config"
 	"skillsRockTodo/internal/infrastructure/storemap"
 	customLogger "skillsRockTodo/internal/logger"
+	"skillsRockTodo/internal/service"
 )
 
 func main() {
@@ -37,13 +37,9 @@ func main() {
 	}
 
 	store := storemap.New()
-	fmt.Println(logger)
-	fmt.Println(store)
 
+	service := service.New(store, logger)
 	/*
-		// Создание сервиса с бизнес-логикой
-		serviceInstance := service.NewService(repository, logger)
-
 		// Инициализация API
 		app := api.NewRouters(&api.Routers{Service: serviceInstance}, cfg.Rest.Token)
 
