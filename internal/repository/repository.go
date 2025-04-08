@@ -5,9 +5,9 @@ import (
 )
 
 type Repository interface {
-	CreateTask(dto *dtoCreateTaskReq) error
+	CreateTask(dto *DtoCreateTaskReq) error
 	GetTasks() ([]*entity.Task, error)
 	GetTask(Id int) (*entity.Task, error)
-	UpdateTask(dto *dtoUpdateTaskReq) error
+	UpdateTask(dto *DtoUpdateTaskReq) error
 	DeleteTask(Id int) error
 }

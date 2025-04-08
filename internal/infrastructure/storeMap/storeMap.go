@@ -3,6 +3,7 @@ package storemap
 import (
 	"errors"
 	"skillsRockTodo/internal/entity"
+	"skillsRockTodo/internal/repository"
 	"time"
 )
 
@@ -18,7 +19,8 @@ func New() *StoreMap {
 	}
 }
 
-func (s *StoreMap) CreateTask(dto *repository.dtoCreateTaskReq) error {
+func (s *StoreMap) CreateTask(dto *repository.DtoCreateTaskReq) error {
+
 	s.serial++
 	task := entity.Task{
 		Id:          s.serial,
@@ -45,25 +47,24 @@ func (s *StoreMap) GetTask(Id int) (*entity.Task, error) {
 	for i := range s.data {
 		if s.data[i].Id == Id {
 			task := *s.data[i]
-			return *task, nil
+			return &task, nil
 		}
 	}
 	return nil, errors.New("task not found")
 }
-func (s *StoreMap) UpdateTask(dto *repository.dtoUpdateTaskReq) error {
+func (s *StoreMap) UpdateTask(dto *repository.DtoUpdateTaskReq) error {
 	for i := range s.data {
-		if s.data[i].Id == taskId {
-			task := *s.data[i]
+		if s.data[i].Id == dto.Id {
 			if dto.Title != nil {
-				task.Title = *dto.Title
+				s.data[i].Title = *dto.Title
 			}
 			if dto.Description != nil {
-				task.Description = *dto.Description
+				s.data[i].Description = *dto.Description
 			}
 			if dto.Status != nil {
-				task.Status = *dto.Status
+				s.data[i].Status = *dto.Status
 			}
-			task.UpdateAt = time.Now()
+			s.data[i].UpdateAt = time.Now()
 			return nil
 		}
 	}
@@ -72,8 +73,8 @@ func (s *StoreMap) UpdateTask(dto *repository.dtoUpdateTaskReq) error {
 func (s *StoreMap) DeleteTask(Id int) error {
 	for i := range s.data {
 		if s.data[i].Id == Id {
-			s.data[i] = s.data[len(s.data-1)]
-			s.data = s.data[:len(s.data-1)]
+			s.data[i] = s.data[len(s.data)-1]
+			s.data = s.data[:len(s.data)-1]
 			return nil
 		}
 	}
