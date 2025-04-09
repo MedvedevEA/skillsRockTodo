@@ -22,6 +22,10 @@ const (
 	ErrUnknownValidation  = "Unknown validation error"
 )
 
+func init() {
+	SetValidator(New())
+}
+
 func New() *validator.Validate {
 	v := validator.New()
 	_ = v.RegisterValidation("tag", validateTag)

@@ -1,11 +1,10 @@
-package repository
+package dto
 
-type DtoCreateTaskReq struct {
+type AddTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Status      string `json:"status"`
 }
-type DtoUpdateTaskReq struct {
+type UpdateTask struct {
 	Id          int     `json:"id"`
 	Title       *string `json:"title"`
 	Description *string `json:"description"`

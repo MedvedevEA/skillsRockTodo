@@ -3,6 +3,8 @@ package apiserver
 import (
 	"os"
 	"os/signal"
+	"skillsRockTodo/internal/apiserver/middleware"
+	"skillsRockTodo/internal/config"
 	"skillsRockTodo/internal/controller"
 	"skillsRockTodo/internal/service"
 	"syscall"
@@ -11,15 +13,19 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"go.uber.org/zap"
 )
 
 type ApiServer struct {
 	server        *fiber.App
+	log           *zap.SugaredLogger
 	ListenAddress string
 }
 
-func New(service *service.Service, ListenAddress string) *ApiServer {
-	app := fiber.New()
+func New(service *service.Service, log *zap.SugaredLogger, cfg config.Rest) *ApiServer {
+	app := fiber.New(fiber.Config{
+		WriteTimeout: cfg.WriteTimeout,
+	})
 	app.Use(cors.New(cors.Config{
 		AllowMethods:     "GET, POST, PUT, DELETE",
 		AllowHeaders:     "Accept, Authorization, Content-Type, X-CSRF-Token, X-REQUEST-SomeID",
@@ -29,11 +35,13 @@ func New(service *service.Service, ListenAddress string) *ApiServer {
 	}))
 	app.Use(recover.New(recover.ConfigDefault))
 	app.Use(logger.New(logger.ConfigDefault))
-	controller.Init(app, service)
+	app.Use(middleware.Authorization(cfg.Token))
+	controller.Init(app, service, log)
 
 	return &ApiServer{
 		server:        app,
-		ListenAddress: ListenAddress,
+		log:           log,
+		ListenAddress: cfg.ListenAddress,
 	}
 }
 func (a *ApiServer) Run() error {

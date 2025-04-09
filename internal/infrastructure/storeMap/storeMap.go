@@ -1,37 +1,42 @@
 package storemap
 
 import (
-	"errors"
 	"skillsRockTodo/internal/entity"
-	"skillsRockTodo/internal/repository"
+	"skillsRockTodo/internal/repository/dto"
+	"skillsRockTodo/pkg/servererrors"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type StoreMap struct {
+	log    *zap.SugaredLogger
 	serial int
 	data   []*entity.Task
 }
 
-func New() *StoreMap {
+func New(log *zap.SugaredLogger) *StoreMap {
 	return &StoreMap{
+		log:    log,
 		serial: 0,
 		data:   []*entity.Task{},
 	}
 }
 
-func (s *StoreMap) CreateTask(dto *repository.DtoCreateTaskReq) error {
+func (s *StoreMap) AddTask(dto *dto.AddTask) (*entity.Task, error) {
 
 	s.serial++
 	task := entity.Task{
 		Id:          s.serial,
 		Title:       dto.Title,
 		Description: dto.Description,
-		Status:      dto.Status,
+		Status:      "new",
 		CreateAt:    time.Now(),
 		UpdateAt:    time.Now(),
 	}
+	task2 := task
 	s.data = append(s.data, &task)
-	return nil
+	return &task2, nil
 }
 func (s *StoreMap) GetTasks() ([]*entity.Task, error) {
 	tasks := []*entity.Task{}
@@ -50,9 +55,9 @@ func (s *StoreMap) GetTask(Id int) (*entity.Task, error) {
 			return &task, nil
 		}
 	}
-	return nil, errors.New("task not found")
+	return nil, servererrors.ErrorRecordNotFound
 }
-func (s *StoreMap) UpdateTask(dto *repository.DtoUpdateTaskReq) error {
+func (s *StoreMap) UpdateTask(dto *dto.UpdateTask) error {
 	for i := range s.data {
 		if s.data[i].Id == dto.Id {
 			if dto.Title != nil {
@@ -68,9 +73,9 @@ func (s *StoreMap) UpdateTask(dto *repository.DtoUpdateTaskReq) error {
 			return nil
 		}
 	}
-	return errors.New("task not found")
+	return servererrors.ErrorRecordNotFound
 }
-func (s *StoreMap) DeleteTask(Id int) error {
+func (s *StoreMap) RemoveTask(Id int) error {
 	for i := range s.data {
 		if s.data[i].Id == Id {
 			s.data[i] = s.data[len(s.data)-1]
@@ -78,5 +83,5 @@ func (s *StoreMap) DeleteTask(Id int) error {
 			return nil
 		}
 	}
-	return errors.New("task not found")
+	return servererrors.ErrorRecordNotFound
 }

@@ -36,12 +36,12 @@ func main() {
 		log.Fatal(errors.Wrap(err, "error initializing logger"))
 	}
 
-	store := storemap.New()
+	store := storemap.New(logger)
 
 	service := service.New(store, logger)
 
 	logger.Infof("API Server '%s' is started in addr:[%s]", cfg.Rest.ServerName, cfg.Rest.ListenAddress)
-	apiServer := apiserver.New(service, cfg.Rest.Token)
+	apiServer := apiserver.New(service, logger, cfg.Rest)
 	if err := apiServer.Run(); err != nil {
 		logger.Fatalf("API Server '%s' error: %s", cfg.Rest.ServerName, err)
 	}

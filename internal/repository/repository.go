@@ -2,12 +2,13 @@ package repository
 
 import (
 	"skillsRockTodo/internal/entity"
+	"skillsRockTodo/internal/repository/dto"
 )
 
 type Repository interface {
-	CreateTask(dto *DtoCreateTaskReq) error
+	AddTask(dto *dto.AddTask) (*entity.Task, error)
 	GetTasks() ([]*entity.Task, error)
 	GetTask(Id int) (*entity.Task, error)
-	UpdateTask(dto *DtoUpdateTaskReq) error
-	DeleteTask(Id int) error
+	UpdateTask(dto *dto.UpdateTask) error
+	RemoveTask(Id int) error
 }
