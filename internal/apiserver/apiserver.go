@@ -9,9 +9,9 @@ import (
 	"skillsRockTodo/internal/service"
 	"syscall"
 
+	"github.com/gofiber/contrib/fiberzap/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
 )
@@ -34,7 +34,9 @@ func New(service *service.Service, log *zap.SugaredLogger, cfg config.Rest) *Api
 		MaxAge:           300,
 	}))
 	app.Use(recover.New(recover.ConfigDefault))
-	app.Use(logger.New(logger.ConfigDefault))
+	app.Use(fiberzap.New(fiberzap.Config{
+		Logger: log.Desugar(),
+	}))
 	app.Use(middleware.Authorization(cfg.Token))
 	controller.Init(app, service, log)
 

@@ -4,6 +4,7 @@ go 1.24.0
 
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/gofiber/contrib/fiberzap/v2 v2.1.6
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -23,7 +24,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.51.0 // indirect
+	github.com/valyala/fasthttp v1.56.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
