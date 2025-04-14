@@ -2,53 +2,41 @@ package main
 
 import (
 	"context"
-	"flag"
+	"fmt"
 	"log"
-
-	"github.com/joho/godotenv"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
 
 	"skillsRockTodo/internal/apiserver"
 	"skillsRockTodo/internal/config"
 	"skillsRockTodo/internal/infrastructure/postgresql"
-	customLogger "skillsRockTodo/internal/logger"
+	"skillsRockTodo/internal/logger"
 	"skillsRockTodo/internal/service"
 )
 
 func main() {
-
-	flagConfig := flag.String("config", "./../../config/todo.env", "Configuration file")
-	flag.Parse()
-	if *flagConfig != "" {
-		err := godotenv.Load(*flagConfig)
-		if err != nil {
-			log.Fatal(errors.Wrap(err, "failed to load .env file"))
-		}
-	}
-
-	var cfg config.TodoConfig
-	if err := envconfig.Process("", &cfg); err != nil {
-		log.Fatal(errors.Wrap(err, "failed to load configuration"))
-	}
-
-	logger, err := customLogger.NewLogger(cfg.LogLevel)
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "error initializing logger"))
-	}
-
-	store, err := postgresql.New(context.Background(), cfg.PostgreSQL, logger)
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	service := service.New(store, logger)
-
-	logger.Infof("API Server '%s' is started in addr:[%s]", cfg.Rest.ServerName, cfg.Rest.ListenAddress)
-	apiServer := apiserver.New(service, logger, cfg.Rest)
-	if err := apiServer.Run(); err != nil {
-		logger.Fatalf("API Server '%s' error: %s", cfg.Rest.ServerName, err)
+	lg, err := logger.New(cfg.Env)
+	if err != nil {
+		log.Fatal(err)
 	}
-	logger.Infof("API Server '%s' is stoped", cfg.Rest.ServerName)
+
+	store, err := postgresql.New(context.Background(), &cfg.PostgreSQL, lg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	service := service.New(store, lg)
+
+	lg.Info(fmt.Sprintf("API Server '%s' is started in addr:[%s]", cfg.Api.Name, cfg.Api.Addr))
+	apiServer := apiserver.New(service, lg, &cfg.Api)
+	if err := apiServer.Run(); err != nil {
+		lg.Error(fmt.Sprintf("API Server '%s' error: %s", cfg.Api.Name, err))
+		return
+	}
+	lg.Info(fmt.Sprintf("API Server '%s' is stoped", cfg.Api.Name))
+	return
 
 }

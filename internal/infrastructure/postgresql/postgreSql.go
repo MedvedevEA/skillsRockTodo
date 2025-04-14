@@ -3,20 +3,20 @@ package postgresql
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"skillsRockTodo/internal/config"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 type PostgreSql struct {
 	pool *pgxpool.Pool
-	log  *zap.SugaredLogger
+	log  *slog.Logger
 }
 
-func New(ctx context.Context, cfg config.PostgreSQL, log *zap.SugaredLogger) (*PostgreSql, error) {
+func New(ctx context.Context, cfg *config.PostgreSQL, log *slog.Logger) (*PostgreSql, error) {
 	const op = "postgresql.New"
 	connString := fmt.Sprintf(
 		`user=%s password=%s host=%s port=%d dbname=%s sslmode=%s pool_max_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s`,
