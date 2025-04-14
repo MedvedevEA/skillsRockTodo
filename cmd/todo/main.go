@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 
@@ -10,7 +11,7 @@ import (
 
 	"skillsRockTodo/internal/apiserver"
 	"skillsRockTodo/internal/config"
-	"skillsRockTodo/internal/infrastructure/storemap"
+	"skillsRockTodo/internal/infrastructure/postgresql"
 	customLogger "skillsRockTodo/internal/logger"
 	"skillsRockTodo/internal/service"
 )
@@ -36,7 +37,10 @@ func main() {
 		log.Fatal(errors.Wrap(err, "error initializing logger"))
 	}
 
-	store := storemap.New(logger)
+	store, err := postgresql.New(context.Background(), cfg.PostgreSQL, logger)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	service := service.New(store, logger)
 
