@@ -55,12 +55,12 @@ func (p *PostgreSql) GetTask(taskId *uuid.UUID) (*entity.Task, error) {
 
 func (p *PostgreSql) GetTasks(dto *dto.GetTasks) ([]*entity.Task, error) {
 	const op = "postgresql.GetTasks"
-	var tasks []*entity.Task
 	rows, err := p.pool.Query(context.Background(), getTasksQuery, dto.Offset, dto.Limit)
 	if err != nil {
 		p.lg.Error("failed to get tasks", slog.String("op", op), slog.Any("error", err))
 	}
 	defer rows.Close()
+	var tasks []*entity.Task
 	for rows.Next() {
 		task := new(entity.Task)
 		err := rows.Scan(&task.TaskId, &task.Title, &task.Description, &task.Status, &task.CreateAt, &task.UpdateAt)
@@ -76,7 +76,7 @@ func (p *PostgreSql) GetTasks(dto *dto.GetTasks) ([]*entity.Task, error) {
 func (p *PostgreSql) UpdateTask(dto *dto.UpdateTask) (*entity.Task, error) {
 	const op = "postgresql.UpdateTask"
 	task := new(entity.Task)
-	err := p.pool.QueryRow(context.Background(), updateTaskQuery, *dto.TaskId, *(dto.Title), *dto.Description, *dto.Status).Scan(&task.TaskId, &task.Title, &task.Description, &task.Status, &task.CreateAt, &task.UpdateAt)
+	err := p.pool.QueryRow(context.Background(), updateTaskQuery, dto.TaskId, dto.Title, dto.Description, dto.Status).Scan(&task.TaskId, &task.Title, &task.Description, &task.Status, &task.CreateAt, &task.UpdateAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		p.lg.Error("failed to update task", slog.String("op", op), slog.Any("error", err))
 		return nil, servererrors.RecordNotFound

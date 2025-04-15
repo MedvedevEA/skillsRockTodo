@@ -47,8 +47,16 @@ func Init(app *fiber.App, service Service, lg *slog.Logger) {
 	app.Get("/tasks", controller.GetTasks)
 	app.Patch("/tasks/:taskId", controller.UpdateTask)
 	app.Delete("/tasks/:taskId", controller.RemoveTask)
+
+	app.Post("/users", controller.AddUser)
+	app.Get("/users/:userId", controller.GetUser)
+	app.Get("/users", controller.GetUsers)
+	app.Patch("/users/:userId", controller.UpdateUser)
+	app.Delete("/users/:userId", controller.RemoveUser)
+
 }
 
+// Task
 func (c *Controller) AddTask(ctx *fiber.Ctx) error {
 	const op = "controller.AddTask"
 	req := new(ctlDto.AddTask)
@@ -153,6 +161,120 @@ func (c *Controller) RemoveTask(ctx *fiber.Ctx) error {
 		return response.StatusBadRequest(ctx, err)
 	}
 	err := c.service.RemoveTask(req.TaskId)
+	if errors.Is(err, servererrors.RecordNotFound) {
+		return response.StatusNotFound(ctx, err)
+	}
+	if err != nil {
+		return response.StatusInternalServerError(ctx, err)
+	}
+	return response.StatusNoContent(ctx)
+}
+
+// User
+
+func (c *Controller) AddUser(ctx *fiber.Ctx) error {
+	const op = "controller.AddUser"
+	req := new(ctlDto.AddUser)
+	if err := ctx.BodyParser(req); err != nil {
+		c.lg.Error("failed to add user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := validator.Validate(ctx.Context(), req); err != nil {
+		c.lg.Error("failed to add user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	User, err := c.service.AddUser(&repoDto.AddUser{
+		Name:     req.Name,
+		Password: req.Password,
+	})
+	if err != nil {
+		return response.StatusInternalServerError(ctx, err)
+	}
+	return response.StatusCreated(ctx, User)
+}
+func (c *Controller) GetUser(ctx *fiber.Ctx) error {
+	const op = "controller.GetUser"
+	req := new(ctlDto.GetUser)
+	if err := ctx.ParamsParser(req); err != nil {
+		c.lg.Error("failed to get user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := validator.Validate(ctx.Context(), req); err != nil {
+		c.lg.Error("failed to get user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	User, err := c.service.GetUser(req.UserId)
+	if errors.Is(err, servererrors.RecordNotFound) {
+		return response.StatusNotFound(ctx, err)
+	}
+	if err != nil {
+		return response.StatusInternalServerError(ctx, err)
+	}
+	return response.StatusOk(ctx, User)
+}
+func (c *Controller) GetUsers(ctx *fiber.Ctx) error {
+	const op = "controller.GetUsers"
+	req := &ctlDto.GetUsers{
+		Offset: 0,
+		Limit:  10,
+	}
+	if err := ctx.QueryParser(req); err != nil {
+		c.lg.Error("failed to get users", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := validator.Validate(ctx.Context(), req); err != nil {
+		c.lg.Error("failed to get users", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	Users, err := c.service.GetUsers(&repoDto.GetUsers{
+		Offset: req.Offset,
+		Limit:  req.Limit,
+	})
+	if err != nil {
+		return response.StatusInternalServerError(ctx, err)
+	}
+	return response.StatusOk(ctx, Users)
+}
+func (c *Controller) UpdateUser(ctx *fiber.Ctx) error {
+	const op = "controller.UpdateUser"
+	req := new(ctlDto.UpdateUser)
+	if err := ctx.BodyParser(req); err != nil {
+		c.lg.Error("failed to update user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := ctx.ParamsParser(req); err != nil {
+		c.lg.Error("failed to update user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := validator.Validate(ctx.Context(), req); err != nil {
+		c.lg.Error("failed to update user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	user, err := c.service.UpdateUser(&repoDto.UpdateUser{
+		UserId:   req.UserId,
+		Name:     req.Name,
+		Password: req.Password,
+	})
+	if errors.Is(err, servererrors.RecordNotFound) {
+		return response.StatusNotFound(ctx, err)
+	}
+	if err != nil {
+		return response.StatusInternalServerError(ctx, err)
+	}
+	return response.StatusOk(ctx, user)
+}
+func (c *Controller) RemoveUser(ctx *fiber.Ctx) error {
+	const op = "controller.RemoveUser"
+	req := new(ctlDto.RemoveUser)
+	if err := ctx.ParamsParser(req); err != nil {
+		c.lg.Error("failed to remove user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := validator.Validate(ctx.Context(), req); err != nil {
+		c.lg.Error("failed to remove user", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	err := c.service.RemoveUser(req.UserId)
 	if errors.Is(err, servererrors.RecordNotFound) {
 		return response.StatusNotFound(ctx, err)
 	}

@@ -16,7 +16,6 @@ func (s *Service) GetUser(userId *uuid.UUID) (*entity.User, error) {
 func (s *Service) GetUsers(dto *dto.GetUsers) ([]*entity.User, error) {
 	return s.store.GetUsers(dto)
 }
-
 func (s *Service) UpdateUser(dto *dto.UpdateUser) (*entity.User, error) {
 	return s.store.UpdateUser(dto)
 }
