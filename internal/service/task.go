@@ -16,7 +16,6 @@ func (s *Service) GetTask(taskId *uuid.UUID) (*entity.Task, error) {
 func (s *Service) GetTasks(dto *dto.GetTasks) ([]*entity.Task, error) {
 	return s.store.GetTasks(dto)
 }
-
 func (s *Service) UpdateTask(dto *dto.UpdateTask) (*entity.Task, error) {
 	return s.store.UpdateTask(dto)
 }

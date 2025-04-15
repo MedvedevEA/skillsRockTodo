@@ -1,6 +1,7 @@
 package apiserver
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -16,12 +17,12 @@ import (
 )
 
 type ApiServer struct {
-	app  *fiber.App
-	log  *slog.Logger
-	addr string
+	app *fiber.App
+	lg  *slog.Logger
+	cfg *config.Api
 }
 
-func New(service *service.Service, log *slog.Logger, cfg *config.Api) *ApiServer {
+func New(service *service.Service, lg *slog.Logger, cfg *config.Api) *ApiServer {
 	app := fiber.New(fiber.Config{
 		WriteTimeout: cfg.WriteTimeout,
 	})
@@ -34,19 +35,21 @@ func New(service *service.Service, log *slog.Logger, cfg *config.Api) *ApiServer
 	}))
 	app.Use(recover.New(recover.ConfigDefault))
 	app.Use(middleware.Authorization())
-	controller.Init(app, service, log)
+	controller.Init(app, service, lg)
 
 	return &ApiServer{
-		app:  app,
-		log:  log,
-		addr: cfg.Addr,
+		app,
+		lg,
+		cfg,
 	}
 }
-func (a *ApiServer) Run() error {
+func (a *ApiServer) MustRun() {
 
+	const op = "apiserver.Run"
 	chError := make(chan error, 1)
 	go func() {
-		if err := a.app.Listen(a.addr); err != nil {
+		a.lg.Info(fmt.Sprintf("API Server '%s' is started in addr:[%s]", a.cfg.Name, a.cfg.Addr), slog.String("op", op))
+		if err := a.app.Listen(a.cfg.Addr); err != nil {
 			chError <- err
 		}
 	}()
@@ -56,6 +59,10 @@ func (a *ApiServer) Run() error {
 		<-chQuit
 		chError <- a.app.Shutdown()
 	}()
+	if err := <-chError; err != nil {
+		a.lg.Error(fmt.Sprintf("API Server '%s' error", a.cfg.Name), slog.String("op", op), slog.Any("error", err))
+		return
+	}
+	a.lg.Info(fmt.Sprintf("API Server '%s' is stopped", a.cfg.Name), slog.String("op", op))
 
-	return <-chError
 }

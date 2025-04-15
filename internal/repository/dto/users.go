@@ -7,9 +7,9 @@ type AddUser struct {
 	Password string `json:"password"`
 }
 type GetUsers struct {
-	Page     int    `json:"page"`
-	PageSize int    `json:"page_size"`
-	Name     string `json:"name"`
+	Offset int    `json:"offset"`
+	Limit  int    `json:"limit"`
+	Name   string `json:"name"`
 }
 type UpdateUser struct {
 	UserId   *uuid.UUID `json:"user_id"`

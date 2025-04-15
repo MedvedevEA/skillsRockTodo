@@ -7,8 +7,8 @@ type AddUserTask struct {
 	TaskId *uuid.UUID `json:"task_id"`
 }
 type GetUserTasks struct {
-	Page     int        `json:"page"`
-	PageSize int        `json:"page_size"`
-	UserId   *uuid.UUID `json:"user_id"`
-	TaskId   *uuid.UUID `json:"task_id"`
+	Offset int        `json:"offset"`
+	Limit  int        `json:"limit"`
+	UserId *uuid.UUID `json:"user_id"`
+	TaskId *uuid.UUID `json:"task_id"`
 }

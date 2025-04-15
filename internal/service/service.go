@@ -7,12 +7,12 @@ import (
 
 type Service struct {
 	store repository.Repository
-	log   *slog.Logger
+	lg    *slog.Logger
 }
 
-func New(store repository.Repository, log *slog.Logger) *Service {
+func New(store repository.Repository, lg *slog.Logger) *Service {
 	return &Service{
 		store,
-		log,
+		lg,
 	}
 }

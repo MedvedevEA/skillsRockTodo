@@ -3,20 +3,21 @@ package postgresql
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
+
 	"skillsRockTodo/internal/config"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/pkg/errors"
 )
 
 type PostgreSql struct {
 	pool *pgxpool.Pool
-	log  *slog.Logger
+	lg   *slog.Logger
 }
 
-func New(ctx context.Context, cfg *config.PostgreSQL, log *slog.Logger) (*PostgreSql, error) {
+func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.PostgreSQL) *PostgreSql {
 	const op = "postgresql.New"
 	connString := fmt.Sprintf(
 		`user=%s password=%s host=%s port=%d dbname=%s sslmode=%s pool_max_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s`,
@@ -33,18 +34,18 @@ func New(ctx context.Context, cfg *config.PostgreSQL, log *slog.Logger) (*Postgr
 
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
-		return nil, errors.Wrap(err, op)
+		log.Fatalf("%s: %s", op, err)
 	}
 
 	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeCacheDescribe
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
-		return nil, errors.Wrap(err, op)
+		log.Fatalf("%s: %s", op, err)
 	}
 
 	return &PostgreSql{
-		pool: pool,
-		log:  log,
-	}, nil
+		pool,
+		lg,
+	}
 }

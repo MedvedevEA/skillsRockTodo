@@ -1,7 +1,6 @@
 package config
 
 import (
-	"flag"
 	"log"
 	"os"
 	"time"
@@ -34,27 +33,37 @@ type PostgreSQL struct {
 	PoolMaxConnIdleTime time.Duration `yaml:"poolMaxConnIidleTime" env:"TODO_PG_POOL_MAX_CONN_IDLE_TIME" env-default:"100s"`
 }
 
-func Load() (*Config, error) {
-	const op = "config.Load"
+func MustLoad() *Config {
+	const op = "config.MustLoad"
 
-	var configPath string
+	configPath := "./../../config/local.yml"
+	cfg := new(Config)
 
-	flag.StringVar(&configPath, "config", "", "path to config file")
-	flag.Parse()
-
-	if configPath == "" {
-		log.Println("the 'config' flag is not set")
-		configPath = os.Getenv("TODO_CONFIG_PATH")
+	//flag.StringVar(&configPath, "config", "", "path to config file")
+	//flag.Parse()
+	if configPath != "" {
+		log.Printf("%s: the value of the 'config' flag: %s\n", op, configPath)
+		if err := cleanenv.ReadConfig(configPath, cfg); err != nil {
+			log.Fatal(errors.Wrap(err, op))
+		}
+		return cfg
 	}
-	var cfg Config
+	log.Printf("%s: the 'config' flag is not set\n", op)
 
-	if configPath == "" {
-		log.Println("environment variable 'TODO_CONFIG_PATH' is not set")
-		log.Println("creating a configuration file based on environment variables")
-		err := cleanenv.ReadEnv(&cfg)
-		return &cfg, err
+	configPath = os.Getenv("TODO_CONFIG_PATH")
+	if configPath != "" {
+		log.Printf("%s: the value of the environment variable: %s\n", op, configPath)
+		if err := cleanenv.ReadConfig(configPath, cfg); err != nil {
+			log.Fatal(errors.Wrap(err, op))
+		}
+		return cfg
 	}
-	log.Printf("creating a configuration file based on %s\n", configPath)
-	err := cleanenv.ReadConfig(configPath, &cfg)
-	return &cfg, errors.Wrap(err, op)
+	log.Printf("%s: environment variable 'TODO_CONFIG_PATH' is not set\n", op)
+
+	log.Printf("%s: the parameter file is not defined. Loading the application configuration from the environment variables\n", op)
+	if err := cleanenv.ReadEnv(cfg); err != nil {
+		log.Fatal(errors.Wrap(err, op))
+	}
+	log.Printf("%s: configuration file %+v", op, cfg)
+	return cfg
 }

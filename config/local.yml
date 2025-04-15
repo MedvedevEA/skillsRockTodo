@@ -8,9 +8,9 @@ api:
 postgreSql:
  host: localhost
  port: 5433
- name: postgres
+ name: todo
  user: postgres
- password: postgres
+ password: 1234
  sslMode: disable
  poolMaxConns: 10
  poolMaxConnLifeTime: 300s

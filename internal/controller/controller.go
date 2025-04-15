@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"errors"
 	"log/slog"
 	ctlDto "skillsRockTodo/internal/controller/dto"
@@ -10,7 +9,6 @@ import (
 	repoDto "skillsRockTodo/internal/repository/dto"
 	"skillsRockTodo/pkg/servererrors"
 	"skillsRockTodo/pkg/validator"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -36,13 +34,13 @@ type Service interface {
 }
 type Controller struct {
 	service Service
-	log     *slog.Logger
+	lg      *slog.Logger
 }
 
-func Init(app *fiber.App, service Service, log *slog.Logger) {
+func Init(app *fiber.App, service Service, lg *slog.Logger) {
 	controller := &Controller{
 		service,
-		log,
+		lg,
 	}
 	app.Post("/tasks", controller.AddTask)
 	app.Get("/tasks/:taskId", controller.GetTask)
@@ -52,13 +50,14 @@ func Init(app *fiber.App, service Service, log *slog.Logger) {
 }
 
 func (c *Controller) AddTask(ctx *fiber.Ctx) error {
-	var req ctlDto.AddTask
-	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
-		c.log.Error("Invalid request body", slog.Any("error", err))
+	const op = "controller.AddTask"
+	req := new(ctlDto.AddTask)
+	if err := ctx.BodyParser(req); err != nil {
+		c.lg.Error("failed to add task", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.log.Error("Request data validation error", slog.Any("error", err))
+		c.lg.Error("failed to add task", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
 	}
 	task, err := c.service.AddTask(&repoDto.AddTask{
@@ -66,70 +65,66 @@ func (c *Controller) AddTask(ctx *fiber.Ctx) error {
 		Description: req.Description,
 	})
 	if err != nil {
-		c.log.Error("Failed to insert task", slog.Any("error", err))
 		return response.StatusInternalServerError(ctx, err)
 	}
 	return response.StatusCreated(ctx, task)
 }
-func (c *Controller) GetTasks(ctx *fiber.Ctx) error {
-	page, err := strconv.Atoi(ctx.Queries()["page"])
-	if err != nil {
-		c.log.Error("Invalid query parameter", slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
-	}
-	pageSize, err := strconv.Atoi(ctx.Queries()["pagesize"])
-	if err != nil {
-		c.log.Error("Invalid query parameter", slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
-	}
-	tasks, err := c.service.GetTasks(&repoDto.GetTasks{
-		Page:     page,
-		PageSize: pageSize,
-	})
-	if err != nil {
-		c.log.Error("Failed to get tasks", slog.Any("error", err))
-		return response.StatusInternalServerError(ctx, err)
-	}
-	return response.StatusOk(ctx, tasks)
-}
 func (c *Controller) GetTask(ctx *fiber.Ctx) error {
-	taskId, err := uuid.Parse(ctx.Params("taskId"))
-	if err != nil {
-		c.log.Error("Invalid request parameter", slog.Any("error", err))
+	const op = "controller.GetTask"
+	req := new(ctlDto.GetTask)
+	if err := ctx.ParamsParser(req); err != nil {
+		c.lg.Error("failed to get task", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
-	}
-	var req = ctlDto.GetTask{
-		TaskId: &taskId,
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.log.Error("Request data validation error", slog.Any("error", err))
+		c.lg.Error("failed to get task", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
 	}
 	task, err := c.service.GetTask(req.TaskId)
-	if errors.Is(err, servererrors.ErrorRecordNotFound) {
-		c.log.Error("Failed to get task", slog.Any("error", err))
+	if errors.Is(err, servererrors.RecordNotFound) {
 		return response.StatusNotFound(ctx, err)
 	}
 	if err != nil {
-		c.log.Error("Failed to get task", slog.Any("error", err))
 		return response.StatusInternalServerError(ctx, err)
 	}
 	return response.StatusOk(ctx, task)
 }
-func (c *Controller) UpdateTask(ctx *fiber.Ctx) error {
-	var req ctlDto.UpdateTask
-	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
-		c.log.Error("Invalid request body", slog.Any("error", err))
+func (c *Controller) GetTasks(ctx *fiber.Ctx) error {
+	const op = "controller.GetTasks"
+	req := &ctlDto.GetTasks{
+		Offset: 0,
+		Limit:  10,
+	}
+	if err := ctx.QueryParser(req); err != nil {
+		c.lg.Error("failed to get tasks", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
 	}
-	taskId, err := uuid.Parse(ctx.Params("taskId"))
-	if err != nil {
-		c.log.Error("Invalid request parameter", slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
-	}
-	req.TaskId = &taskId
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.log.Error("Request data validation error", slog.Any("error", err))
+		c.lg.Error("failed to get tasks", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	tasks, err := c.service.GetTasks(&repoDto.GetTasks{
+		Offset: req.Offset,
+		Limit:  req.Limit,
+	})
+	if err != nil {
+		return response.StatusInternalServerError(ctx, err)
+	}
+	return response.StatusOk(ctx, tasks)
+}
+func (c *Controller) UpdateTask(ctx *fiber.Ctx) error {
+	const op = "controller.UpdateTask"
+	req := new(ctlDto.UpdateTask)
+	if err := ctx.BodyParser(req); err != nil {
+		c.lg.Error("failed to update task", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := ctx.ParamsParser(req); err != nil {
+		c.lg.Error("failed to update task", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := validator.Validate(ctx.Context(), req); err != nil {
+		c.lg.Error("failed to update task", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
 	}
 	task, err := c.service.UpdateTask(&repoDto.UpdateTask{
@@ -138,37 +133,30 @@ func (c *Controller) UpdateTask(ctx *fiber.Ctx) error {
 		Description: req.Description,
 		Status:      req.Status,
 	})
-	if errors.Is(err, servererrors.ErrorRecordNotFound) {
-		c.log.Error("Failed to update task", slog.Any("error", err))
+	if errors.Is(err, servererrors.RecordNotFound) {
 		return response.StatusNotFound(ctx, err)
 	}
 	if err != nil {
-		c.log.Error("Failed to update task", slog.Any("error", err))
 		return response.StatusInternalServerError(ctx, err)
 	}
-
 	return response.StatusOk(ctx, task)
 }
 func (c *Controller) RemoveTask(ctx *fiber.Ctx) error {
-	taskId, err := uuid.Parse(ctx.Params("taskId"))
-	if err != nil {
-		c.log.Error("Invalid request parameter", slog.Any("error", err))
+	const op = "controller.RemoveTask"
+	req := new(ctlDto.RemoveTask)
+	if err := ctx.ParamsParser(req); err != nil {
+		c.lg.Error("failed to remove task", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
-	}
-	var req = ctlDto.GetTask{
-		TaskId: &taskId,
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.log.Error("Request data validation error", slog.Any("error", err))
+		c.lg.Error("failed to remove task", slog.String("op", op), slog.Any("error", err))
 		return response.StatusBadRequest(ctx, err)
 	}
-	err = c.service.RemoveTask(req.TaskId)
-	if errors.Is(err, servererrors.ErrorRecordNotFound) {
-		c.log.Error("Failed to delete task", slog.Any("error", err))
+	err := c.service.RemoveTask(req.TaskId)
+	if errors.Is(err, servererrors.RecordNotFound) {
 		return response.StatusNotFound(ctx, err)
 	}
 	if err != nil {
-		c.log.Error("Failed to delete task", slog.Any("error", err))
 		return response.StatusInternalServerError(ctx, err)
 	}
 	return response.StatusNoContent(ctx)
