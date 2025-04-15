@@ -21,7 +21,6 @@ type Repository interface {
 	RemoveUser(userId *uuid.UUID) error
 
 	AddUserTask(dto *dto.AddUserTask) (*entity.UserTask, error)
-	GetUserTask(userTaskID *uuid.UUID) (*entity.UserTask, error)
 	GetUserTasks(dto *dto.GetUserTasks) ([]*entity.UserTask, error)
 	RemoveUserTask(userTaskID *uuid.UUID) error
 
