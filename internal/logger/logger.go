@@ -1,33 +1,33 @@
-package logging
+package logger
 
 import (
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"log"
+	"log/slog"
+	"os"
 )
 
-const tsKey = "timestamp"
-
-func NewLogger(level string) (*zap.SugaredLogger, error) {
-	logLevel, err := zap.ParseAtomicLevel(level)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error ParseAtomicLevel %s", level)
+func MustNew(env string) *slog.Logger {
+	const op = "logger.MustNew"
+	var lg *slog.Logger
+	switch env {
+	case "local":
+		log.Printf("%s: the logger is configured for deployment environment 'local'\n", op)
+		lg = slog.New(
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case "dev":
+		log.Printf("%s: the logger is configured for deployment environment 'dev'\n", op)
+		lg = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case "prod":
+		log.Printf("%s: the logger is configured for deployment environment 'prod'\n", op)
+		lg = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
+		)
+	default:
+		log.Fatalf("%s: the application deployment environment is not defined\n", op)
 	}
 
-	logger, err := zap.Config{
-		Level:       logLevel,
-		Encoding:    "json",
-		OutputPaths: []string{"stdout"},
-		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey: "message",
-			TimeKey:    tsKey,
-			EncodeTime: zapcore.RFC3339NanoTimeEncoder,
-		},
-		DisableStacktrace: true,
-	}.Build()
-	if err != nil {
-		return nil, errors.Wrap(err, "error logConfig.Build")
-	}
-
-	return logger.Sugar(), nil
+	return lg
 }

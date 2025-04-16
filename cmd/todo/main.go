@@ -1,50 +1,25 @@
 package main
 
 import (
-	"flag"
-	"log"
-
-	"github.com/joho/godotenv"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
+	"context"
 
 	"skillsRockTodo/internal/apiserver"
 	"skillsRockTodo/internal/config"
-	"skillsRockTodo/internal/infrastructure/storemap"
-	customLogger "skillsRockTodo/internal/logger"
+	"skillsRockTodo/internal/infrastructure/postgresql"
+	"skillsRockTodo/internal/logger"
 	"skillsRockTodo/internal/service"
 )
 
 func main() {
+	cfg := config.MustLoad()
 
-	flagConfig := flag.String("config", "./../../config/todo.env", "Configuration file")
-	flag.Parse()
-	if *flagConfig != "" {
-		err := godotenv.Load(*flagConfig)
-		if err != nil {
-			log.Fatal(errors.Wrap(err, "failed to load .env file"))
-		}
-	}
+	lg := logger.MustNew(cfg.Env)
 
-	var cfg config.TodoConfig
-	if err := envconfig.Process("", &cfg); err != nil {
-		log.Fatal(errors.Wrap(err, "failed to load configuration"))
-	}
+	store := postgresql.MustNew(context.Background(), lg, &cfg.PostgreSQL)
 
-	logger, err := customLogger.NewLogger(cfg.LogLevel)
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "error initializing logger"))
-	}
+	service := service.New(store, lg)
 
-	store := storemap.New(logger)
-
-	service := service.New(store, logger)
-
-	logger.Infof("API Server '%s' is started in addr:[%s]", cfg.Rest.ServerName, cfg.Rest.ListenAddress)
-	apiServer := apiserver.New(service, logger, cfg.Rest)
-	if err := apiServer.Run(); err != nil {
-		logger.Fatalf("API Server '%s' error: %s", cfg.Rest.ServerName, err)
-	}
-	logger.Infof("API Server '%s' is stoped", cfg.Rest.ServerName)
+	apiServer := apiserver.New(service, lg, &cfg.Api)
+	apiServer.MustRun()
 
 }

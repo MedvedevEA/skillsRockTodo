@@ -24,4 +24,4 @@ go.work.sum
 # env file
 .env
 # My list
-/config/todo.env
+/config/local.yml

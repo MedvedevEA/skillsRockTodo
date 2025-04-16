@@ -1,37 +1,18 @@
 package service
 
 import (
-	"skillsRockTodo/internal/entity"
+	"log/slog"
 	"skillsRockTodo/internal/repository"
-	"skillsRockTodo/internal/repository/dto"
-
-	"go.uber.org/zap"
 )
 
 type Service struct {
 	store repository.Repository
-	log   *zap.SugaredLogger
+	lg    *slog.Logger
 }
 
-func New(store repository.Repository, log *zap.SugaredLogger) *Service {
+func New(store repository.Repository, lg *slog.Logger) *Service {
 	return &Service{
 		store,
-		log,
+		lg,
 	}
-}
-
-func (s *Service) AddTask(dto *dto.AddTask) (*entity.Task, error) {
-	return s.store.AddTask(dto)
-}
-func (s *Service) GetTasks() ([]*entity.Task, error) {
-	return s.store.GetTasks()
-}
-func (s *Service) GetTask(Id int) (*entity.Task, error) {
-	return s.store.GetTask(Id)
-}
-func (s *Service) UpdateTask(dto *dto.UpdateTask) error {
-	return s.store.UpdateTask(dto)
-}
-func (s *Service) RemoveTask(Id int) error {
-	return s.store.RemoveTask(Id)
 }

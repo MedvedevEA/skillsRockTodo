@@ -3,5 +3,7 @@ package servererrors
 import "errors"
 
 var (
-	ErrorRecordNotFound = errors.New("record not found")
+	RecordNotFound            = errors.New("record not found")
+	InternalServerError       = errors.New("internal server error")
+	InvalidUsernameOrPassword = errors.New("invalid username or password")
 )
