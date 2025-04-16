@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"log"
 	"os"
 	"time"
@@ -36,11 +37,11 @@ type PostgreSQL struct {
 func MustLoad() *Config {
 	const op = "config.MustLoad"
 
-	configPath := "./../../config/local.yml"
+	configPath := ""
 	cfg := new(Config)
 
-	//flag.StringVar(&configPath, "config", "", "path to config file")
-	//flag.Parse()
+	flag.StringVar(&configPath, "config", "", "path to config file")
+	flag.Parse()
 	if configPath != "" {
 		log.Printf("%s: the value of the 'config' flag: %s\n", op, configPath)
 		if err := cleanenv.ReadConfig(configPath, cfg); err != nil {
