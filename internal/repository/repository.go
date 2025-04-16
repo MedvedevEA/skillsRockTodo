@@ -25,4 +25,5 @@ type Repository interface {
 	RemoveUserTask(userTaskID *uuid.UUID) error
 
 	GetAccessPermissions() []*entity.AccessPermission
+	Login(userName string) (string, error)
 }

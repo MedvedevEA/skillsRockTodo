@@ -7,6 +7,7 @@ import (
 	"skillsRockTodo/internal/controller/response"
 	"skillsRockTodo/internal/entity"
 	repoDto "skillsRockTodo/internal/repository/dto"
+	srvDto "skillsRockTodo/internal/service/dto"
 	"skillsRockTodo/pkg/servererrors"
 	"skillsRockTodo/pkg/validator"
 
@@ -30,16 +31,20 @@ type Service interface {
 	AddUserTask(dto *repoDto.AddUserTask) (*entity.UserTask, error)
 	GetUserTasks(dto *repoDto.GetUserTasks) ([]*entity.UserTask, error)
 	RemoveUserTask(userTaskId *uuid.UUID) error
+
+	Login(dto *srvDto.Login) (string, error)
 }
 type Controller struct {
 	service Service
+	auth    map[string]*uuid.UUID
 	lg      *slog.Logger
 }
 
 func Init(app *fiber.App, service Service, lg *slog.Logger) {
 	controller := &Controller{
-		service,
-		lg,
+		service: service,
+		auth:    make(map[string]*uuid.UUID, 0),
+		lg:      lg,
 	}
 	app.Post("/tasks", controller.AddTask)
 	app.Get("/tasks/:taskId", controller.GetTask)
@@ -354,4 +359,26 @@ func (c *Controller) RemoveUserTask(ctx *fiber.Ctx) error {
 		return response.StatusInternalServerError(ctx, err)
 	}
 	return response.StatusNoContent(ctx)
+}
+
+// Auth
+func (c *Controller) Login(ctx *fiber.Ctx) error {
+	const op = "controller.Login"
+	req := new(ctlDto.Login)
+	if err := ctx.BodyParser(req); err != nil {
+		c.lg.Error("failed to login", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	if err := validator.Validate(ctx.Context(), req); err != nil {
+		c.lg.Error("failed to login", slog.String("op", op), slog.Any("error", err))
+		return response.StatusBadRequest(ctx, err)
+	}
+	token, err := c.service.Login(&srvDto.Login{})
+	if errors.Is(err, servererrors.InvalidUsernameOrPassword) {
+		return response.StatusUnauthorized(ctx, err)
+	}
+	if err != nil {
+		return response.StatusInternalServerError(ctx, err)
+	}
+	return response.StatusOk(ctx, token)
 }

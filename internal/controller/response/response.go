@@ -22,6 +22,18 @@ func StatusInternalServerError(ctx *fiber.Ctx, err error) error {
 	})
 }
 
+func StatusUnauthorized(ctx *fiber.Ctx, err error) error {
+	return ctx.Status(fiber.StatusUnauthorized).JSON(Response{
+		Status: "error",
+		Error:  err.Error(),
+	})
+}
+func StatusForbidden(ctx *fiber.Ctx, err error) error {
+	return ctx.Status(fiber.StatusForbidden).JSON(Response{
+		Status: "error",
+		Error:  err.Error(),
+	})
+}
 func StatusNotFound(ctx *fiber.Ctx, err error) error {
 	return ctx.Status(fiber.StatusNotFound).JSON(Response{
 		Status: "error",
