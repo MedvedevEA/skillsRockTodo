@@ -5,7 +5,8 @@ import (
 
 	"skillsRockTodo/internal/apiserver"
 	"skillsRockTodo/internal/config"
-	"skillsRockTodo/internal/infrastructure/postgresql"
+	"skillsRockTodo/internal/controller"
+	"skillsRockTodo/internal/infrastructure/store"
 	"skillsRockTodo/internal/logger"
 	"skillsRockTodo/internal/service"
 )
@@ -15,11 +16,13 @@ func main() {
 
 	lg := logger.MustNew(cfg.Env)
 
-	store := postgresql.MustNew(context.Background(), lg, &cfg.PostgreSQL)
+	store := store.MustNew(context.Background(), lg, &cfg.Store)
 
 	service := service.New(store, lg)
 
-	apiServer := apiserver.New(service, lg, &cfg.Api)
-	apiServer.MustRun()
+	controller := controller.New(service, lg)
 
+	apiServer := apiserver.MustNew(controller, lg, &cfg.Api)
+
+	apiServer.Run()
 }

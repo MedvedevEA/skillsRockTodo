@@ -4,17 +4,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type AddUserTask struct {
-	UserId *uuid.UUID `uri:"userId" validate:"required"`
+type AddTaskUser struct {
 	TaskId *uuid.UUID `uri:"taskId" validate:"required"`
+	UserId *uuid.UUID `uri:"userId" validate:"required"`
 }
-
-type GetUserTasks struct {
+type GetTaskUsers struct {
 	Offset int        `query:"offset" validate:"gte=0"`
 	Limit  int        `query:"limit" validate:"gte=0"`
 	UserId *uuid.UUID `query:"userId"`
 	TaskId *uuid.UUID `query:"taskId"`
 }
-type RemoveUserTask struct {
-	UserTaskId *uuid.UUID `uri:"userTaskId" validate:"required"`
+type RemoveTaskUser struct {
+	TaskUserId *uuid.UUID `uri:"taskUserId" validate:"required"`
 }

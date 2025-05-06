@@ -6,35 +6,30 @@ import (
 	"github.com/google/uuid"
 )
 
+type Message struct {
+	MessageId *uuid.UUID `json:"message_id"`
+	TaskId    *uuid.UUID `json:"task_id"`
+	UserId    *uuid.UUID `json:"user_id"`
+	Text      string     `json:"text"`
+	CreateAt  time.Time  `json:"create_at"`
+	UpdateAt  time.Time  `json:"update_at"`
+}
+type Status struct {
+	StatusId *uuid.UUID `json:"status_id"`
+	Name     string     `json:"name"`
+}
 type Task struct {
 	TaskId      *uuid.UUID `json:"task_id"`
+	StatusId    *uuid.UUID `json:"status_is"`
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
-	Status      string     `json:"status"`
-	CreateAt    time.Time  `json:"create_at"`
-	UpdateAt    time.Time  `json:"update_at"`
 }
-
-type User struct {
-	UserId   *uuid.UUID `json:"user_id"`
-	Name     string     `json:"name"`
-	Password string     `json:"password"`
-	CreateAt time.Time  `json:"create_at"`
-	UpdateAt time.Time  `json:"update_at"`
-}
-
-type UserTask struct {
-	UserTaskId *uuid.UUID `json:"user_task_id"`
-	UserId     *uuid.UUID `json:"user_id"`
+type TaskUser struct {
+	TaskUserId *uuid.UUID `json:"task_user_id"`
 	TaskId     *uuid.UUID `json:"task_id"`
-	CreateAt   time.Time  `json:"create_at"`
-	UpdateAt   time.Time  `json:"update_at"`
+	UserId     *uuid.UUID `json:"user_id"`
 }
-
-type AccessPermission struct {
-	AccessPermissionId *uuid.UUID `json:"access_permission_id"`
-	UserId             *uuid.UUID `json:"user_id"`
-	Route              string     `json:"route"`
-	CreateAt           time.Time  `json:"create_at"`
-	UpdateAt           time.Time  `json:"update_at"`
+type User struct {
+	UserId *uuid.UUID `json:"user_id"`
+	Name   string     `json:"name"`
 }

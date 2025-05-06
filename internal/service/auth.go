@@ -1,20 +1,26 @@
 package service
 
 import (
-	srvDto "skillsRockTodo/internal/service/dto"
-	"skillsRockTodo/pkg/crypto"
-	"skillsRockTodo/pkg/servererrors"
+	svcDto "skillsRockTodo/internal/service/dto"
+
+	"github.com/google/uuid"
 )
 
-func (s *Service) Login(dto *srvDto.Login) (string, error) {
-	passwordHash, err := s.store.Login(dto.Name)
-	if err != nil {
-		return "", err
-	}
-	if crypto.CheckHash(dto.Password, passwordHash) {
-		token := crypto.GenerateSecureToken()
-		return token, nil
-	}
-
-	return "", servererrors.InvalidUsernameOrPassword
+func (s *Service) Registration(dto *svcDto.RegistrationRequest) error {
+	return nil
+}
+func (s *Service) Unregistration(userId *uuid.UUID) error {
+	return nil
+}
+func (s *Service) Login(dto *svcDto.LoginRequest) (*svcDto.LoginResponse, error) {
+	return nil, nil
+}
+func (s *Service) Logout(dto *svcDto.LogoutRequest) error {
+	return nil
+}
+func (s *Service) UpdatePassword(dto *svcDto.UpdatePasswordRequest) error {
+	return nil
+}
+func (s *Service) RefreshToken(tokenId *uuid.UUID) (*svcDto.RefreshTokenResponse, error) {
+	return nil, nil
 }

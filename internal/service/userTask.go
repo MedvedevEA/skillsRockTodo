@@ -2,17 +2,17 @@ package service
 
 import (
 	"skillsRockTodo/internal/entity"
-	"skillsRockTodo/internal/repository/dto"
+	repoStoreDto "skillsRockTodo/internal/repository/repostore/dto"
 
 	"github.com/google/uuid"
 )
 
-func (s *Service) AddUserTask(dto *dto.AddUserTask) (*entity.UserTask, error) {
-	return s.store.AddUserTask(dto)
+func (s *Service) AddTaskUser(dto *repoStoreDto.AddTaskUser) (*entity.TaskUser, error) {
+	return s.store.AddTaskUser(dto)
 }
-func (s *Service) GetUserTasks(dto *dto.GetUserTasks) ([]*entity.UserTask, error) {
-	return s.store.GetUserTasks(dto)
+func (s *Service) GetTaskUsers(dto *repoStoreDto.GetTaskUsers) ([]*entity.TaskUser, error) {
+	return s.store.GetTaskUsers(dto)
 }
-func (s *Service) RemoveUserTask(userTaskId *uuid.UUID) error {
-	return s.store.RemoveUserTask(userTaskId)
+func (s *Service) RemoveTaskUser(TaskUserId *uuid.UUID) error {
+	return s.store.RemoveTaskUser(TaskUserId)
 }
