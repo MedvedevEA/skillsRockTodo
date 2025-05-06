@@ -2,15 +2,15 @@ package service
 
 import (
 	"log/slog"
-	"skillsRockTodo/internal/repository"
+	"skillsRockTodo/internal/repository/repostore"
 )
 
 type Service struct {
-	store repository.Repository
+	store repostore.Repository
 	lg    *slog.Logger
 }
 
-func New(store repository.Repository, lg *slog.Logger) *Service {
+func New(store repostore.Repository, lg *slog.Logger) *Service {
 	return &Service{
 		store,
 		lg,

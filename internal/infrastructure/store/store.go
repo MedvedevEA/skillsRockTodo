@@ -1,4 +1,4 @@
-package postgresql
+package store
 
 import (
 	"context"
@@ -12,13 +12,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PostgreSql struct {
+type Store struct {
 	pool *pgxpool.Pool
 	lg   *slog.Logger
 }
 
-func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.PostgreSQL) *PostgreSql {
-	const op = "postgresql.New"
+func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.Store) *Store {
+	const op = "store.MustNew"
 	connString := fmt.Sprintf(
 		`user=%s password=%s host=%s port=%d dbname=%s sslmode=%s pool_max_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s`,
 		cfg.User,
@@ -44,7 +44,7 @@ func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.PostgreSQL) *Post
 		log.Fatalf("%s: %s", op, err)
 	}
 
-	return &PostgreSql{
+	return &Store{
 		pool,
 		lg,
 	}
