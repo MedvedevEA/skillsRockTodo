@@ -8,11 +8,12 @@ import (
 	repoStoreErr "skillsRockTodo/internal/repository/repostore/err"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
 	addTaskUserQuery = `
-INSERT INTO user_task (task_id, user_id) 
+INSERT INTO task_user (task_id, user_id) 
 VALUES ($1, $2) RETURNING *;`
 	getTaskUsersQuery = `
 SELECT * 
@@ -25,41 +26,45 @@ WHERE task_user_id=$1;`
 )
 
 func (s *Store) AddTaskUser(dto *repoStoreDto.AddTaskUser) (*entity.TaskUser, error) {
-	const op = "store.AddTaskUser"
-	TaskUser := new(entity.TaskUser)
-	err := s.pool.QueryRow(context.Background(), addTaskUserQuery, dto.TaskId, dto.UserId).Scan(&TaskUser.TaskUserId, &TaskUser.UserId, &TaskUser.TaskId)
+	taskUser := new(entity.TaskUser)
+	err := s.pool.QueryRow(context.Background(), addTaskUserQuery, dto.TaskId, dto.UserId).Scan(&taskUser.TaskUserId, &taskUser.UserId, &taskUser.TaskId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w (%v)", op, repoStoreErr.ErrInternalServerError, err)
+		if pgError, ok := err.(*pgconn.PgError); ok && pgError.Code == "23505" {
+			return nil, fmt.Errorf("store.AddTaskUser: %w (%v)", repoStoreErr.ErrUniqueViolation, err)
+
+		}
+		return nil, fmt.Errorf("store.AddTaskUser: %w (%v)", repoStoreErr.ErrInternalServerError, err)
+
 	}
-	return TaskUser, nil
+	return taskUser, nil
 }
 func (s *Store) GetTaskUsers(dto *repoStoreDto.GetTaskUsers) ([]*entity.TaskUser, error) {
 	const op = "store.GetTaskUsers"
 	rows, err := s.pool.Query(context.Background(), getTaskUsersQuery, dto.Offset, dto.Limit, dto.TaskId, dto.UserId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w (%v)", op, repoStoreErr.ErrInternalServerError, err)
+		return nil, fmt.Errorf("store.GetTaskUsers: %w (%v)", repoStoreErr.ErrInternalServerError, err)
 	}
 	defer rows.Close()
-	var TaskUsers []*entity.TaskUser
+	taskUsers := make([]*entity.TaskUser, 0)
 	for rows.Next() {
-		TaskUser := new(entity.TaskUser)
-		err := rows.Scan(&TaskUser.TaskUserId, &TaskUser.TaskId, &TaskUser.UserId)
+		taskUser := new(entity.TaskUser)
+		err := rows.Scan(&taskUser.TaskUserId, &taskUser.TaskId, &taskUser.UserId)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w (%v)", op, repoStoreErr.ErrInternalServerError, err)
+			return nil, fmt.Errorf("store.GetTaskUsers: %w (%v)", repoStoreErr.ErrInternalServerError, err)
 		}
-		TaskUsers = append(TaskUsers, TaskUser)
+		taskUsers = append(taskUsers, taskUser)
 	}
-	return TaskUsers, nil
+	return taskUsers, nil
 }
 
 func (s *Store) RemoveTaskUser(TaskUserId *uuid.UUID) error {
 	const op = "store.RemoveTaskUser"
 	result, err := s.pool.Exec(context.Background(), removeTaskUserQuery, TaskUserId)
 	if err != nil {
-		return fmt.Errorf("%s: %w (%v)", op, repoStoreErr.ErrInternalServerError, err)
+		return fmt.Errorf("store.RemoveTaskUser: %w (%v)", repoStoreErr.ErrInternalServerError, err)
 	}
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("%s: %w (%v)", op, repoStoreErr.ErrRecordNotFound, err)
+		return fmt.Errorf("store.RemoveTaskUser: %w (%v)", repoStoreErr.ErrRecordNotFound, err)
 	}
 	return nil
 }

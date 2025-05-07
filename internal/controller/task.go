@@ -2,94 +2,91 @@ package controller
 
 import (
 	"errors"
-	"log/slog"
+	"fmt"
 	ctrlDto "skillsRockTodo/internal/controller/dto"
-	"skillsRockTodo/internal/controller/response"
+	ctrlErr "skillsRockTodo/internal/controller/err"
 	repoStoreDto "skillsRockTodo/internal/repository/repostore/dto"
-	"skillsRockTodo/pkg/servererrors"
+	repoStoreErr "skillsRockTodo/internal/repository/repostore/err"
 	"skillsRockTodo/pkg/validator"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func (c *Controller) AddTask(ctx *fiber.Ctx) error {
-
-	const op = "controller.AddTask"
 	req := new(ctrlDto.AddTask)
 	if err := ctx.BodyParser(req); err != nil {
-		c.lg.Error("failed to add task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.AddTask: %w (%v)", ctrlErr.ErrBodyParse, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.lg.Error("failed to add task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.AddTask: %w (%v)", ctrlErr.ErrValidate, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	task, err := c.service.AddTask(&repoStoreDto.AddTask{
+		StatusId:    req.StatusId,
 		Title:       req.Title,
 		Description: req.Description,
 	})
 	if err != nil {
-		return response.StatusInternalServerError(ctx, err)
+		return ctx.Status(500).SendString(err.Error())
 	}
-	return response.StatusCreated(ctx, task)
+	return ctx.Status(201).JSON(task)
 }
 func (c *Controller) GetTask(ctx *fiber.Ctx) error {
-	const op = "controller.GetTask"
 	req := new(ctrlDto.GetTask)
 	if err := ctx.ParamsParser(req); err != nil {
-		c.lg.Error("failed to get task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.GetTask: %w (%v)", ctrlErr.ErrParamsParse, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.lg.Error("failed to get task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.GetTask: %w (%v)", ctrlErr.ErrValidate, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	task, err := c.service.GetTask(req.TaskId)
-	if errors.Is(err, servererrors.RecordNotFound) {
-		return response.StatusNotFound(ctx, err)
-	}
 	if err != nil {
-		return response.StatusInternalServerError(ctx, err)
+		if errors.Is(err, repoStoreErr.ErrRecordNotFound) {
+			return ctx.Status(404).SendString(err.Error())
+		}
+		return ctx.Status(500).SendString(err.Error())
 	}
-	return response.StatusOk(ctx, task)
+	return ctx.Status(200).JSON(task)
 }
 func (c *Controller) GetTasks(ctx *fiber.Ctx) error {
-	const op = "controller.GetTasks"
 	req := &ctrlDto.GetTasks{
 		Offset: 0,
 		Limit:  10,
 	}
 	if err := ctx.QueryParser(req); err != nil {
-		c.lg.Error("failed to get tasks", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.GetTasks: %w (%v)", ctrlErr.ErrQueryParse, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.lg.Error("failed to get tasks", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.GetTasks: %w (%v)", ctrlErr.ErrValidate, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	tasks, err := c.service.GetTasks(&repoStoreDto.GetTasks{
-		Offset: req.Offset,
-		Limit:  req.Limit,
+		Offset:   req.Offset,
+		Limit:    req.Limit,
+		StatusId: req.StatusId,
 	})
 	if err != nil {
-		return response.StatusInternalServerError(ctx, err)
+		return ctx.Status(500).SendString(err.Error())
 	}
-	return response.StatusOk(ctx, tasks)
+	return ctx.Status(200).JSON(tasks)
 }
 func (c *Controller) UpdateTask(ctx *fiber.Ctx) error {
-	const op = "controller.UpdateTask"
 	req := new(ctrlDto.UpdateTask)
 	if err := ctx.BodyParser(req); err != nil {
-		c.lg.Error("failed to update task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.UpdateTask: %w (%v)", ctrlErr.ErrBodyParse, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	if err := ctx.ParamsParser(req); err != nil {
-		c.lg.Error("failed to update task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.UpdateTask: %w (%v)", ctrlErr.ErrParamsParse, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.lg.Error("failed to update task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.UpdateTask: %w (%v)", ctrlErr.ErrValidate, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	task, err := c.service.UpdateTask(&repoStoreDto.UpdateTask{
 		TaskId:      req.TaskId,
@@ -97,31 +94,30 @@ func (c *Controller) UpdateTask(ctx *fiber.Ctx) error {
 		Title:       req.Title,
 		Description: req.Description,
 	})
-	if errors.Is(err, servererrors.RecordNotFound) {
-		return response.StatusNotFound(ctx, err)
-	}
 	if err != nil {
-		return response.StatusInternalServerError(ctx, err)
+		if errors.Is(err, repoStoreErr.ErrRecordNotFound) {
+			return ctx.Status(404).SendString(err.Error())
+		}
+		return ctx.Status(500).SendString(err.Error())
 	}
-	return response.StatusOk(ctx, task)
+	return ctx.Status(200).JSON(task)
 }
 func (c *Controller) RemoveTask(ctx *fiber.Ctx) error {
-	const op = "controller.RemoveTask"
 	req := new(ctrlDto.RemoveTask)
 	if err := ctx.ParamsParser(req); err != nil {
-		c.lg.Error("failed to remove task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.RemoveTask: %w (%v)", ctrlErr.ErrParamsParse, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.lg.Error("failed to remove task", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.RemoveTask: %w (%v)", ctrlErr.ErrValidate, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	err := c.service.RemoveTask(req.TaskId)
-	if errors.Is(err, servererrors.RecordNotFound) {
-		return response.StatusNotFound(ctx, err)
-	}
 	if err != nil {
-		return response.StatusInternalServerError(ctx, err)
+		if errors.Is(err, repoStoreErr.ErrRecordNotFound) {
+			return ctx.Status(404).SendString(err.Error())
+		}
+		return ctx.Status(500).SendString(err.Error())
 	}
-	return response.StatusNoContent(ctx)
+	return ctx.SendStatus(204)
 }

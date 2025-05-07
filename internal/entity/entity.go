@@ -7,29 +7,29 @@ import (
 )
 
 type Message struct {
-	MessageId *uuid.UUID `json:"message_id"`
-	TaskId    *uuid.UUID `json:"task_id"`
-	UserId    *uuid.UUID `json:"user_id"`
+	MessageId *uuid.UUID `json:"messageId"`
+	TaskId    *uuid.UUID `json:"taskId"`
+	UserId    *uuid.UUID `json:"userId"`
 	Text      string     `json:"text"`
-	CreateAt  time.Time  `json:"create_at"`
-	UpdateAt  time.Time  `json:"update_at"`
+	CreateAt  time.Time  `json:"createAt"`
+	UpdateAt  *time.Time `json:"updateAt"`
 }
 type Status struct {
-	StatusId *uuid.UUID `json:"status_id"`
+	StatusId *uuid.UUID `json:"statusId"`
 	Name     string     `json:"name"`
 }
 type Task struct {
-	TaskId      *uuid.UUID `json:"task_id"`
-	StatusId    *uuid.UUID `json:"status_is"`
+	TaskId      *uuid.UUID `json:"taskId"`
+	StatusId    *uuid.UUID `json:"statusId"`
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
 }
 type TaskUser struct {
-	TaskUserId *uuid.UUID `json:"task_user_id"`
-	TaskId     *uuid.UUID `json:"task_id"`
-	UserId     *uuid.UUID `json:"user_id"`
+	TaskUserId *uuid.UUID `json:"taskUserId"`
+	TaskId     *uuid.UUID `json:"taskId"`
+	UserId     *uuid.UUID `json:"userId"`
 }
 type User struct {
-	UserId *uuid.UUID `json:"user_id"`
+	UserId *uuid.UUID `json:"userId"`
 	Name   string     `json:"name"`
 }
