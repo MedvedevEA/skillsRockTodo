@@ -18,6 +18,7 @@ type Store struct {
 }
 
 func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.Store) *Store {
+
 	const op = "store.MustNew"
 	connString := fmt.Sprintf(
 		`user=%s password=%s host=%s port=%d dbname=%s sslmode=%s pool_max_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s`,
@@ -43,7 +44,6 @@ func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.Store) *Store {
 	if err != nil {
 		log.Fatalf("%s: %s", op, err)
 	}
-
 	return &Store{
 		pool,
 		lg,

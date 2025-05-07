@@ -5,8 +5,8 @@ import (
 )
 
 type AddTaskUser struct {
-	TaskId *uuid.UUID `uri:"taskId" validate:"required"`
-	UserId *uuid.UUID `uri:"userId" validate:"required"`
+	TaskId *uuid.UUID `json:"taskId" validate:"required"`
+	UserId *uuid.UUID `json:"userId" validate:"required"`
 }
 type GetTaskUsers struct {
 	Offset int        `query:"offset" validate:"gte=0"`

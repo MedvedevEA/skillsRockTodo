@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"log/slog"
+	"fmt"
 	ctrlDto "skillsRockTodo/internal/controller/dto"
-	"skillsRockTodo/internal/controller/response"
+	ctrlErr "skillsRockTodo/internal/controller/err"
 	repoStoreDto "skillsRockTodo/internal/repository/repostore/dto"
 	"skillsRockTodo/pkg/validator"
 
@@ -11,26 +11,25 @@ import (
 )
 
 func (c *Controller) GetUsers(ctx *fiber.Ctx) error {
-	const op = "controller.GetUsers"
 	req := &ctrlDto.GetUsers{
 		Offset: 0,
 		Limit:  10,
 	}
 	if err := ctx.QueryParser(req); err != nil {
-		c.lg.Error("failed to get users", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.GetUsers: %w (%v)", ctrlErr.ErrQueryParse, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	if err := validator.Validate(ctx.Context(), req); err != nil {
-		c.lg.Error("failed to get users", slog.String("op", op), slog.Any("error", err))
-		return response.StatusBadRequest(ctx, err)
+		err := fmt.Errorf("controller.GetUsers: %w (%v)", ctrlErr.ErrValidate, err)
+		return ctx.Status(400).SendString(err.Error())
 	}
 	users, err := c.service.GetUsers(&repoStoreDto.GetUsers{
 		Offset: req.Offset,
 		Limit:  req.Limit,
+		Name:   req.Name,
 	})
 	if err != nil {
-		c.lg.Error("failed to get users", slog.String("op", op), slog.Any("error", err))
-		return response.StatusInternalServerError(ctx, err)
+		return ctx.Status(500).SendString(err.Error())
 	}
-	return response.StatusOk(ctx, users)
+	return ctx.Status(200).JSON(users)
 }

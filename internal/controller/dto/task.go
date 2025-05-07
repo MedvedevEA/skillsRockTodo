@@ -3,7 +3,7 @@ package dto
 import "github.com/google/uuid"
 
 type AddTask struct {
-	StatusId    *uuid.UUID `json:"status_id"`
+	StatusId    *uuid.UUID `json:"statusId"`
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
 }
@@ -13,11 +13,11 @@ type GetTask struct {
 type GetTasks struct {
 	Offset   int        `query:"offset" validate:"gte=0"`
 	Limit    int        `query:"limit" validate:"gte=0"`
-	StatusId *uuid.UUID `json:"status_id"`
+	StatusId *uuid.UUID `query:"statusId"`
 }
 type UpdateTask struct {
 	TaskId      *uuid.UUID `uri:"taskId" validate:"required"`
-	StatusId    *uuid.UUID `json:"status_id" validate:"omitempty"`
+	StatusId    *uuid.UUID `json:"statusId" validate:"omitempty"`
 	Title       *string    `json:"title" validate:"omitempty"`
 	Description *string    `json:"description" validate:"omitempty"`
 }

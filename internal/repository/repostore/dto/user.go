@@ -7,7 +7,7 @@ type AddUser struct {
 	Name   string     `json:"name"`
 }
 type GetUsers struct {
-	Offset int    `json:"offset"`
-	Limit  int    `json:"limit"`
-	Name   string `json:"name"`
+	Offset int     `json:"offset"`
+	Limit  int     `json:"limit"`
+	Name   *string `json:"name"`
 }
