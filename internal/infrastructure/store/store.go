@@ -17,7 +17,7 @@ type Store struct {
 	lg   *slog.Logger
 }
 
-func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.Store) *Store {
+func MustNew(lg *slog.Logger, cfg *config.Store) *Store {
 
 	const op = "store.MustNew"
 	connString := fmt.Sprintf(
@@ -40,7 +40,7 @@ func MustNew(ctx context.Context, lg *slog.Logger, cfg *config.Store) *Store {
 
 	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeCacheDescribe
 
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		log.Fatalf("%s: %s", op, err)
 	}

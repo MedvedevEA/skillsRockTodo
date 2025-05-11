@@ -1,53 +1,63 @@
+CREATE TABLE IF NOT EXISTS public.status
+(
+    status_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    name character varying COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT status_pkey PRIMARY KEY (status_id)
+);
 CREATE TABLE IF NOT EXISTS public."user"
 (
     user_id uuid NOT NULL DEFAULT gen_random_uuid(),
     name character varying COLLATE pg_catalog."default" NOT NULL,
-    password character varying COLLATE pg_catalog."default" NOT NULL,
-    create_at timestamp with time zone DEFAULT now(),
-    update_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT user_pk PRIMARY KEY (user_id),
-    CONSTRAINT user_name_unique UNIQUE (name)
+    CONSTRAINT user_pk PRIMARY KEY (user_id)
 );
-
 CREATE TABLE IF NOT EXISTS public.task
 (
     task_id uuid NOT NULL DEFAULT gen_random_uuid(),
-    title character varying COLLATE pg_catalog."default" NOT NULL,
-    description character varying COLLATE pg_catalog."default" NOT NULL,
-    status character varying COLLATE pg_catalog."default" NOT NULL DEFAULT 'new'::character varying,
-    create_at timestamp with time zone DEFAULT now(),
-    update_at timestamp with time zone DEFAULT now(),
+    status_id uuid NOT NULL,
+    title character varying COLLATE pg_catalog."default" NOT NULL DEFAULT ''::character varying,
+    description character varying COLLATE pg_catalog."default" NOT NULL DEFAULT ''::character varying,
     CONSTRAINT task_pk PRIMARY KEY (task_id),
-    CONSTRAINT tasks_status_check CHECK (status::text = ANY (ARRAY['new'::character varying, 'in_progress'::character varying, 'done'::character varying]::text[]))
+    CONSTRAINT task_status_id_fk FOREIGN KEY (status_id)
+        REFERENCES public.status (status_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+        NOT VALID
 );
-
-CREATE TABLE IF NOT EXISTS public.user_task
+CREATE TABLE IF NOT EXISTS public.message
 (
-    user_task_id uuid NOT NULL DEFAULT gen_random_uuid(),
-    user_id uuid NOT NULL,
+    message_id uuid NOT NULL DEFAULT gen_random_uuid(),
     task_id uuid NOT NULL,
-    create_at timestamp with time zone DEFAULT now(),
-    update_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT user_task_pk PRIMARY KEY (user_task_id),
-    CONSTRAINT user_task_user_id_task_id_unique UNIQUE (user_id, task_id),
-    CONSTRAINT user_task_task_fk FOREIGN KEY (task_id)
+    user_id uuid DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
+    text character varying COLLATE pg_catalog."default" NOT NULL DEFAULT ''::character varying,
+    create_at timestamp with time zone NOT NULL DEFAULT now(),
+    update_at timestamp with time zone,
+    CONSTRAINT message_pk PRIMARY KEY (message_id),
+    CONSTRAINT message_task_id_fk FOREIGN KEY (task_id)
         REFERENCES public.task (task_id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE CASCADE
         NOT VALID,
-    CONSTRAINT user_task_user_fk FOREIGN KEY (user_id)
+    CONSTRAINT message_user_id_fk FOREIGN KEY (user_id)
+        REFERENCES public."user" (user_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+        NOT VALID
+);
+CREATE TABLE IF NOT EXISTS public.task_user
+(
+    task_user_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    task_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    CONSTRAINT task_user_pk PRIMARY KEY (task_user_id),
+    CONSTRAINT task_user_task_id_user_id_unique UNIQUE (task_id, user_id),
+    CONSTRAINT task_user_task_id_fk FOREIGN KEY (task_id)
+        REFERENCES public.task (task_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+        NOT VALID,
+    CONSTRAINT task_user_user_id_fk FOREIGN KEY (user_id)
         REFERENCES public."user" (user_id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE CASCADE
         NOT VALID
 );
-CREATE INDEX IF NOT EXISTS user_task_task_id_btree
-    ON public.user_task USING btree
-    (task_id ASC NULLS LAST)
-    WITH (deduplicate_items=True)
-    TABLESPACE pg_default;
-CREATE INDEX IF NOT EXISTS user_task_user_id_btree
-    ON public.user_task USING btree
-    (user_id ASC NULLS LAST)
-    WITH (deduplicate_items=True)
-    TABLESPACE pg_default;

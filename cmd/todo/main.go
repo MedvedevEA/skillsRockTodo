@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-
 	"skillsRockTodo/internal/apiserver"
 	"skillsRockTodo/internal/config"
 	"skillsRockTodo/internal/controller"
@@ -16,7 +14,7 @@ func main() {
 
 	lg := logger.MustNew(cfg.Env)
 
-	store := store.MustNew(context.Background(), lg, &cfg.Store)
+	store := store.MustNew(lg, &cfg.Store)
 
 	service := service.New(store, lg)
 
